@@ -271,8 +271,6 @@ hrm() {
   hadoop fs -rm$_r "$@"
 }
 
-# one of these days I need to experiment with command_not_found_handle
-
 hrmr() {
   hadoop fs -rmr "$@"
 } 
@@ -313,7 +311,7 @@ hkill() {
   hadoop job -kill "$@"
 }
 
-# new -- Added by KD
+# new
 
 hlsn() {
   a=$(hls "$@")

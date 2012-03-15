@@ -1,0 +1,7 @@
+Here is a list of shell shortcuts used to help with hadoop commands
+
+Hadoop commands at shell prompt are rather long.
+The hadoop-shortcuts can be sourced and added to the profile for quick shortcuts.
+
+They give a quick alias like functionality
+Hope you will find them useful.
