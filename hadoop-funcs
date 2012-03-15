@@ -1,0 +1,340 @@
+hls() {
+  [ "$1" = '-r' ] && shift && local _r=r
+
+  hadoop fs -ls$_r "$@" | perl -lane 'print $F[7] if $F[7]'
+}
+
+hlst() {
+  hadoop fs -ls "$@" | sort -k6,7 | perl -lane 'print $F[7] if $F[7]'
+}
+
+hlsm() {
+  local _sort_cmd=cat
+  [ "$1" = '-t' ] && shift && _sort_cmd="sort -k6,7"
+
+  hadoop fs -ls "$@" \
+    | $_sort_cmd \
+    | perl -lane 'printf("%-10s%s\n", int($F[4] / 1024 / 1024) . "M", $F[7])
+      if $F[7]'
+}
+
+hlsmt() {
+  hlsm -t "$@"
+}
+
+hlsg() {
+  local _sort_cmd=cat
+  [ "$1" = '-t' ] && shift && _sort_cmd="sort -k6,7"
+
+  hadoop fs -ls "$@" \
+    | $_sort_cmd \
+    | perl -lane 'printf("%-7s%s\n", int($F[4] / 1024 / 1024 / 1024) . "G",
+      $F[7]) if $F[7]'
+}
+
+hlsgt() {
+  hlsg -t "$@"
+}
+
+hlsr() {
+  hls -r "$@"
+}
+
+hlsh() {
+  local _sort_cmd=cat
+  [ "$1" = '-t' ] && shift && _sort_cmd="sort -k6,7"
+
+  hadoop fs -ls "$@" \
+    | $_sort_cmd \
+    | perl -lane '
+    if ($F[4] > 1099511627776) {
+      $size = sprintf "%dT", $F[4] / 1099511627776;
+    }
+    elsif ($F[4] > 1073741824) {
+      $size = sprintf "%dG", $F[4] / 1073741824;
+    }
+    elsif ($F[4] > 1048576) {
+      $size = sprintf "%dM", $F[4] / 1048576;
+    }
+    elsif ($F[4] > 1024) {
+      $size = sprintf "%dK", $F[4] / 1024;
+    }
+    else {
+      $size = sprintf "%dB", $F[4];
+    }
+    printf "%-5s%s\n", $size, $F[7] if $F[7];
+  '
+}
+
+hlsht() {
+  hlsh -t "$@"
+}
+
+hlsl() {
+  [ "$1" = '-r' ] && shift && local _r=r
+
+  hadoop fs -ls$_r "$@" | perl -lane '
+    if ($F[4] > 1099511627776) {
+      $size = sprintf "%dT", $F[4] / 1099511627776;
+    }
+    elsif ($F[4] > 1073741824) {
+      $size = sprintf "%dG", $F[4] / 1073741824;
+    }
+    elsif ($F[4] > 1048576) {
+      $size = sprintf "%dM", $F[4] / 1048576;
+    }
+    elsif ($F[4] > 1024) {
+      $size = sprintf "%dK", $F[4] / 1024;
+    }
+    else {
+      $size = sprintf "%dB", $F[4];
+    }
+    #$size = sprintf "%8s", $size;
+    s/\s+(\d+)\s+(\d{4}-\d{2}-\d{2})/ $size \2/;
+    #$home =~ "/user/" . $ENV{USER};
+    #s/ $home/ ~/;
+    print if $F[7];
+  '
+}
+
+hlslt() {
+  hlsl "$@" | sort -k6,7
+}
+
+hlslr() {
+  hlsl -r "$@"
+}
+
+hduks() {
+  hadoop fs -dus "$@" | perl -lane '
+    $size = $F[1] / 1024;
+    printf "%d %s\n", $size, $F[0];
+  '
+}
+
+hduhs() {
+  hadoop fs -dus "$@" | perl -lane '
+    if ($F[1] > 1099511627776) {
+      $size = sprintf "%dT", $F[1] / 1099511627776;
+    }
+    elsif ($F[1] > 1073741824) {
+      $size = sprintf "%dG", $F[1] / 1073741824;
+    }
+    elsif ($F[1] > 1048576) {
+      $size = sprintf "%dM", $F[1] / 1048576;
+    }
+    elsif ($F[1] > 1024) {
+      $size = sprintf "%dK", $F[1] / 1024;
+    }
+    else {
+      $size = sprintf "%dB", $F[1];
+    }
+    printf "%-5s%s\n", $size, $F[0];
+  '
+}
+
+hdf() {
+  hadoop fs -df "$@" | perl -lane '
+    $f = $F[1];
+    if ($f > 1099511627776) {
+      $size = sprintf "%dT", $f / 1099511627776;
+    }
+    elsif ($f > 1073741824) {
+      $size = sprintf "%dG", $f / 1073741824;
+    }
+    elsif ($f > 1048576) {
+      $size = sprintf "%dM", $f / 1048576;
+    }
+    elsif ($f > 1024) {
+      $size = sprintf "%dK", $f / 1024;
+    }
+    else {
+      $size = sprintf "%dB", $f;
+    }
+
+    $f = $F[2];
+    if ($f > 1099511627776) {
+      $used = sprintf "%dT", $f / 1099511627776;
+    }
+    elsif ($f > 1073741824) {
+      $used = sprintf "%dG", $f / 1073741824;
+    }
+    elsif ($f > 1048576) {
+      $used = sprintf "%dM", $f / 1048576;
+    }
+    elsif ($f > 1024) {
+      $used = sprintf "%dK", $f / 1024;
+    }
+    else {
+      $used = sprintf "%dB", $f;
+    }
+
+    $f = $F[3];
+    if ($f > 1099511627776) {
+      $avail = sprintf "%dT", $f / 1099511627776;
+    }
+    elsif ($f > 1073741824) {
+      $avail = sprintf "%dG", $f / 1073741824;
+    }
+    elsif ($f > 1048576) {
+      $avail = sprintf "%dM", $f / 1048576;
+    }
+    elsif ($f > 1024) {
+      $avail = sprintf "%dK", $f / 1024;
+    }
+    else {
+      $avail = sprintf "%dB", $f;
+    }
+
+    $format = "%-20s %-8s%-8s%-8s%s\n";
+    if (/^Filesystem/) {
+      printf $format, $F[0], $F[1], $F[2], $F[3], $F[4];
+    }
+    else {
+      printf $format, $F[0], $size, $used, $avail, $F[4];
+    }
+  '
+}
+
+hcat() {
+  hadoop fs -cat "$@"
+}
+
+htext() {
+  hadoop fs -text "$@"
+}
+
+hhead() {
+  hadoop fs -cat "$@" | head
+}
+
+htail() {
+  hadoop fs -cat "$@" | tail
+}
+
+hless() {
+  hadoop fs -cat "$@" | less
+}
+
+hcp() {
+  hadoop fs -cp "$@"
+}
+
+hmv() {
+  hadoop fs -mv "$@"
+}
+
+hget() {
+  hadoop fs -get "$@"
+}
+
+hput() {
+  [ "$1" = '-f' ] && shift && local force=y
+
+  if [ $# -lt 2 ]; then
+    echo error: target must be specified >&2
+    return 1
+  fi
+
+  hadoop fs -put "$@" &>/tmp/hput.$$
+  rc=$?
+
+  if [ $rc -ne 0 ] && [ -n "$force" ]; then
+    argv=("$@")
+    argc=$(($# - 1))
+    target=${argv[$argc]}
+
+    # if the target is a directory, remove the possible dir/file combos
+    hadoop fs -test -d $target
+    if [ $? -eq 0 ]; then
+      n=0
+      while [ $n -lt $argc ]; do
+        file=${argv[$n]##*/}
+        echo force: hadoop fs -rm $target/$file
+        hadoop fs -rm $target/$file &>/dev/null
+        n=$((n + 1))
+      done
+    else
+        echo force: hadoop fs -rm $target
+        hadoop fs -rm $target &>/dev/null
+    fi
+
+    hadoop fs -put "$@"
+  else
+    cat /tmp/hput.$$ >&2
+    return $rc
+  fi
+}
+
+hrm() {
+  [ "$1" = '-r' ] && shift && local _r=r
+  hadoop fs -rm$_r "$@"
+}
+
+# one of these days I need to experiment with command_not_found_handle
+
+hrmr() {
+  hadoop fs -rmr "$@"
+} 
+
+hmkdir() {
+  hadoop fs -mkdir "$@"
+}
+
+hchmod() {
+  hadoop fs -chmod "$@"
+}
+
+hchown() {
+  hadoop fs -chown "$@"
+}
+
+hchgrp() {
+  hadoop fs -chgrp "$@"
+}
+
+htouch() {
+  hadoop fs -touchz "$@"
+}
+
+hmerge() {
+  hadoop fs -getmerge "$@"
+}
+
+hrep() {
+  sudo -u hdfs hadoop dfsadmin -report | less
+}
+
+hjl() {
+  hadoop job -list "$@"
+}
+
+hkill() {
+  hadoop job -kill "$@"
+}
+
+# new -- Added by KD
+
+hlsn() {
+  a=$(hls "$@")
+  echo "$a" | while read line; do echo ${line##/*/}; done
+}
+
+hlsnt() {
+  a=$(hlst "$@")
+  echo "$a" | while read line; do echo ${line##/*/}; done
+}
+
+hdir() {
+   hadoop fs -lsr "$@" | grep ^d
+}
+
+hcount() {
+   hadoop fs -cat "$@" | wc -l
+}
+
+hhelp() {
+ echo "functions available: "
+ typeset -f | awk '/ \(\) $/ && !/^main / {print $1}' | grep ^h
+}
+

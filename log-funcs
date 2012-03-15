@@ -1,0 +1,41 @@
+# log-funcs
+
+log_init() {
+    _log=$1
+    _log_dir=${_log%/*}
+    _log_format='%s:%s:%s:%s\n'
+
+    case "$2" in
+        w) _log_mode=w ;;
+        a) _log_mode=a ;;
+        *) _log_mode=a ;;
+    esac
+
+    if [ -f $_log ] && [ ! -w $_log ]; then
+        echo error: cannot write to log $_log >&2
+        unset _log
+        return 1
+    elif [ ! -f $_log ] && [ ! -w $_log_dir ]; then
+        echo error: cannot create log in $_log_dir >&2
+        unset _log
+        return 2
+    fi
+
+    if [ $_log_mode = w ]; then
+        > $_log
+    fi
+
+    log "log_init called with mode $_log_mode"
+
+    return 0
+}
+
+log() {
+    [ -z "$_log" ] && return 1
+    local d=`date +%Y-%m-%d\ %H:%M:%S`
+    local h=${HOSTNAME%%.*}
+    #local h=`hostname -s`
+
+   # printf "$_log_format" "$d" $h $$ "$@" >> $_log
+    printf "$_log_format" "$d" $h $$ "$@" | tee -a  $_log
+}
